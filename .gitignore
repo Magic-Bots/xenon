@@ -1,7 +1,8 @@
 # Project Specific
 storage/*
-*statics.py
-*secrets*
+statics.py
+secrets.*
+config.*
 
 # Byte-compiled / optimized / DLL files
 .idea/
