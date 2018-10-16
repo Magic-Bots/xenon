@@ -1,102 +1,61 @@
-import logging
-import sys
-import traceback
-
-import dbl
-import discord
-import sentry_sdk
-import aiohttp
+from aiohttp import ClientSession
 from discord.ext import commands
 
-import statics
-
-description = ""
-
-sentry_sdk.init(statics.sentry_key)
-
-logger = logging.getLogger('discord')
-logger.setLevel(logging.INFO)
-handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
-handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-logger.addHandler(handler)
+from utils import formatter, context
 
 
-def prefix(bot, msg):
-    return statics.prefix
+em = formatter.embed_message
 
 
 class Xenon(commands.AutoShardedBot):
-    def __init__(self, token):
-        activity = None
-        if not statics.test_mode:
-            activity = discord.Activity(type=discord.ActivityType.streaming, name="Starting Up ...", url="https://twitch.tv/merlintor")
+    def __init__(self, logger, **kwargs):
+        self.log = logger
 
-        super().__init__(
-            command_prefix=prefix,
-            description=description,
-            activity = activity
-        )
+        super().__init__(command_prefix=self._prefix_callable, shard_count=self.config.shard_count, shard_ids=self.config.shard_ids)
+        self.session = ClientSession(loop=self.loop)
+        self.remove_command("help")
 
-        self.session = aiohttp.ClientSession(loop=self.loop)
-        self.dblpy = dbl.Client(self, statics.dbl_token, loop=self.loop)
-
-        self.initial_extensions = (
-            "cogs.help",
-            "cogs.basics",
-            "cogs.backups",
-            "cogs.templates",
-            "cogs.admin",
-            "cogs.dynamic_cogs",
-            "cogs.blacklist",
-            "cogs.pro",
-            # "cogs.rollback",
-
-            "cogs.command_error",
-            "cogs.web",
-            "cogs.special_events",
-            "cogs.stats"
-        )
-
-        for cog in self.initial_extensions:
-            try:
-                self.load_extension(cog)
-            except Exception as e:
-                print(f'Failed to load cog {cog}.', file=sys.stderr)
-                traceback.print_exc()
-
-        self.run(statics.token)
+        for ext in self.config.extensions:
+            self.load_extension(ext)
 
     async def on_shard_ready(self, shard_id):
-        print(f"Shard {shard_id} ready")
+        self.log.info(f"Shard {shard_id} ready")
 
     async def on_ready(self):
-        if not statics.test_mode:
-            await self.change_presence(activity=discord.Activity(name=""))
+        self.log.info(f"Fetched {sum([g.member_count for g in self.guilds])} members on {len(self.guilds)} guilds")
 
-        print(f"Connected to {str(self.user)} with {self.shard_count} shard(s).")
-        print(f"Fetched {sum([len(guild.members) for guild in self.guilds])} members in {len(self.guilds)} guilds.")
+    async def on_resumed(self):
+        self.log.debug(f"Bot resumed")
 
-    async def on_message(self, msg):
-        if msg.author.bot:
+    async def on_message(self, message):
+        if message.author.bot:
             return
-        await self.process_commands(msg)
+
+        await self.process_commands(message)
+
+    async def process_commands(self, message):
+        if message.author.bot:
+            return
+
+        ctx = await self.get_context(message, cls=context.Context)
+        await self.invoke(ctx)
+
+    def _prefix_callable(self, bot, msg):
+        valid = [f"<@{self.user.id}> ",
+                 f"<@!{self.user.id}> ",
+                 f"<@{self.user.id}>",
+                 f"<@!{self.user.id}>",
+                 self.config.prefix]
+
+        return valid
 
     @property
-    def shard_info(self):
-        shards = {}
-        for guild in self.guilds:
-            shard = guild.shard_id
-            if shards.get(shard) is None:
-                shards[shard] = {"guilds": 1, "users": len(guild.members), "latency": None}
+    def config(self):
+        return __import__("config")
 
-            else:
-                shards[shard]["guilds"] += 1
-                shards[shard]["users"] += len(guild.members)
+    def run(self):
+        super().run(self.config.token)
 
-        for shard, latency in self.latencies:
-            shards[shard]["latency"] = latency
-
-        return shards
-
-
-bot = Xenon(statics.token)
+    async def close(self):
+        await super().close()
+        await self.session.close()
