@@ -1,7 +1,5 @@
 # Project Specific
-storage/*
-statics.py
-secrets.*
+logs/*
 config.*
 
 # Byte-compiled / optimized / DLL files

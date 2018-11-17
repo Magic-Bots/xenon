@@ -1,4 +1,5 @@
 import rethinkdb as rdb
+from discord.ext import commands as cmd
 
 
 rdb.set_loop_type("asyncio")
@@ -7,12 +8,12 @@ con = None
 host, port, database = "localhost", 28015, "xenon"
 table_setup = {
     "xenon": {
-        "stats": [
-            {"id": "socket"},
-            {"id": "commands"}
-        ]
+        "backups": {},
+        "templates": {},
+        "intervals": {}
     }
 }
+
 
 async def setup():
     global con
@@ -32,3 +33,11 @@ async def setup():
 
 async def update_stats(**keys):
     await rdb.table("bot").get("stats").update(keys).run(con)
+
+
+class DatabaseConverter(cmd.Converter):
+    def __init__(self, table):
+        self.table = table
+
+    async def convert(self, ctx, argument):
+        return await rdb.table(self.table).get(argument).run(con)
