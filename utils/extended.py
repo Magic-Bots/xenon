@@ -16,3 +16,7 @@ class Context(cmd.Context):
     @property
     def em(self):
         return self.bot.em
+
+    @property
+    def config(self):
+        return self.bot.config

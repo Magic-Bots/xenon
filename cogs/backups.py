@@ -21,7 +21,7 @@ class Backups:
 
     @cmd.group(aliases=["bu"], invoke_without_command=True)
     async def backup(self, ctx):
-        pass
+        await ctx.invoke(self.bot.get_command("help"), "backup")
 
     def random_id(self):
         return "".join([random.choice(string.digits + string.ascii_lowercase) for i in range(16)])
@@ -47,7 +47,7 @@ class Backups:
             embed = ctx.em(
                 f"Created backup of **{ctx.guild.name}** with the Backup id `{id}`\n", type="info")["embed"]
             embed.add_field(name="Usage",
-                            value=f"```{self.bot.config.prefix}backup load {id}```\n```{self.bot.config.prefix}backup info {id}```")
+                            value=f"```{ctx.prefix}backup load {id}```\n```{ctx.prefix}backup info {id}```")
             await ctx.author.send(embed=embed)
         except:
             traceback.print_exc()
@@ -59,7 +59,7 @@ class Backups:
     @cmd.bot_has_permissions(administrator=True)
     @checks.bot_has_managed_top_role()
     async def load(self, ctx, backup_id, chatlog: int = 20):
-        chatlog = chatlog if chatlog < max_chatlog and chatlog > 0 else max_chatlog
+        chatlog = chatlog if chatlog < max_chatlog and chatlog >= 0 else max_chatlog
         backup = await ctx.db.rdb.table("backups").get(backup_id).run(ctx.db.con)
         if backup is None or backup.get("creator") != str(ctx.author.id):
             raise cmd.CommandError(f"You have **no backup** with the id `{backup_id}`.")
@@ -91,7 +91,7 @@ class Backups:
             raise cmd.CommandError(f"You have **no backup** with the id `{backup_id}`.")
 
         await ctx.db.rdb.table("backups").get(backup_id).delete().run(ctx.db.con)
-        await ctx.send(**ctx.em("Successfully **deleted backup**", type="success"))
+        await ctx.send(**ctx.em("Successfully **deleted backup**.", type="success"))
 
     @backup.command(aliases=["i", "inf"])
     async def info(self, ctx, backup_id):
@@ -109,7 +109,7 @@ class Backups:
         embed.add_field(name="Roles", value=handler.roles(), inline=True)
         await ctx.send(embed=embed)
 
-    @backup.command(aliases=["iv"])
+    @backup.command(aliases=["iv", "auto"])
     async def interval(self, ctx, *interval):
         if len(interval) == 0:
             interval = await ctx.db.rdb.table("intervals").get(str(ctx.guild.id)).run(ctx.db.con)
@@ -128,7 +128,9 @@ class Backups:
             )
             embed.add_field(
                 name="Next Backup",
-                value=str(datetime.utcnow() + timedelta(minutes=interval["interval"])).split(".")[0]
+                value=helpers.datetime_to_string(
+                    (datetime.utcnow() + timedelta(minutes=interval["interval"]))
+                )
             )
             await ctx.send(embed=embed)
             return
@@ -152,7 +154,7 @@ class Backups:
         embed.add_field(name="Interval", value=str(timedelta(minutes=minutes)).split(".")[0])
         embed.add_field(
             name="Next Backup",
-            value=str(datetime.utcnow() + timedelta(minutes=minutes)).split(".")[0]
+            value=helpers.datetime_to_string(datetime.utcnow() + timedelta(minutes=minutes))
         )
         await ctx.send(embed=embed)
 
