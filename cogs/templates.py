@@ -122,6 +122,7 @@ class Templates:
             await warning.delete()
 
         if str(reaction.emoji) != "✅":
+            ctx.command.reset_cooldown(ctx)
             await warning.delete()
             return
 

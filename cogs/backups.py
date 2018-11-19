@@ -115,13 +115,15 @@ class Backups:
             await warning.delete()
 
         if str(reaction.emoji) != "✅":
+            ctx.command.reset_cooldown(ctx)
             await warning.delete()
             return
 
         if len(load_options) == 0:
             options = {
                 "channels": True,
-                "roles": True
+                "roles": True,
+                "bans": True
             }
 
         else:
