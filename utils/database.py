@@ -10,7 +10,8 @@ table_setup = {
     "xenon": {
         "backups": {},
         "templates": {},
-        "intervals": {}
+        "intervals": {},
+        "blacklist": {}
     }
 }
 

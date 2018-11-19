@@ -41,7 +41,7 @@ def embed_message(content=None, embed_title=None, embed=None, type=None):
     return {"embed": embed}
 
 
-def paginate(content, limit):
+def paginate(content, limit=1900):
     result = [""]
     lines = content.splitlines(keepends=True)
     i = 0
