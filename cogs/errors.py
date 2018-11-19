@@ -10,7 +10,8 @@ em = formatter.embed_message
 
 
 basic_formatter = {
-    cmd.MissingRequiredArgument: "Missing the required argument **{error.param.name}**.",
+    cmd.MissingRequiredArgument: "You forgot to define the argument **{error.param.name}**. "
+                                 "Use `{ctx.config.prefix}help {ctx.command.qualified_name}` for more information.",
     cmd.NoPrivateMessage: "This command **can't be used** in **private** messages.",
     cmd.DisabledCommand: "This command **is** currently **disabled**.",
     cmd.NotOwner: "This command can **only** be used by **the owner** of this bot."
