@@ -1,4 +1,5 @@
 from discord.ext import commands as cmd
+import discord
 from discord_backups import BackupSaver, BackupLoader, BackupInfo
 import string
 import random
@@ -59,10 +60,25 @@ class Backups:
                 f"Created backup of **{ctx.guild.name}** with the Backup id `{id}`\n", type="info")["embed"]
             embed.add_field(name="Usage",
                             value=f"```{ctx.prefix}backup load {id}```\n```{ctx.prefix}backup info {id}```")
-            await ctx.author.send(embed=embed)
+            result_msg = await ctx.author.send(embed=embed)
+            await result_msg.add_reaction("📱")
         except:
             traceback.print_exc()
             await status.edit(**ctx.em("I was **unable to send you the backup-id**. Please make sure you have dm's enabled.", type="error"))
+
+    async def on_reaction_add(self, reaction, user):
+        msg = reaction.message
+        if not isinstance(msg.channel, discord.DMChannel) or user.bot:
+            return
+
+        if str(reaction.emoji) != "📱" or len(msg.embeds) == 0:
+            return
+
+        embed = msg.embeds[0]
+        for field in embed.fields:
+            if field.name == "Usage":
+                await msg.edit(content=field.value, embed=None)
+                break
 
     @backup.command(aliases=["l"])
     @cmd.guild_only()
@@ -241,7 +257,8 @@ class Backups:
                         name="Usage",
                         value=f"```{self.bot.config.prefix}backup load {id}```\n```{self.bot.config.prefix}backup info {id}```"
                     )
-                    await guild.owner.send(embed=embed)
+                    result_msg = await guild.owner.send(embed=embed)
+                    await result_msg.add_reaction("📱")
             except:
                 traceback.print_exc()
 
