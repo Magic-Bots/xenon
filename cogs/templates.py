@@ -18,6 +18,7 @@ class Templates:
         pass
 
     @template.command(aliases=["c"])
+    @cmd.cooldown(1, 30, cmd.BucketType.user)
     async def create(self, ctx, backup_id, name, *, description):
         """
         Turn a private backup into a PUBLIC template.
@@ -93,6 +94,7 @@ class Templates:
     @cmd.has_permissions(administrator=True)
     @cmd.bot_has_permissions(administrator=True)
     @checks.bot_has_managed_top_role()
+    @cmd.cooldown(1, 5 * 60, cmd.BucketType.guild)
     async def load(self, ctx, *, template_name):
         """
         Load a template
@@ -128,6 +130,7 @@ class Templates:
         await handler.load(ctx.guild, ctx.author, 0)
 
     @template.command(aliases=["i", "inf"])
+    @cmd.cooldown(1, 5, cmd.BucketType.user)
     async def info(self, ctx, *, template_name):
         """
         Get information about a template

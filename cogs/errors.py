@@ -1,6 +1,7 @@
 from discord.ext import commands as cmd
 import traceback
 import sys
+from datetime import timedelta
 
 from utils import formatter
 
@@ -27,6 +28,9 @@ class Errors:
         error = getattr(error, 'original', error)
         catch_all = True
 
+        if not isinstance(error, cmd.CommandOnCooldown):
+            ctx.command.reset_cooldown(ctx)
+
         for error_cls in ignore:
             if isinstance(error, error_cls):
                 return
@@ -45,8 +49,13 @@ class Errors:
             return
 
         if isinstance(error, cmd.CommandOnCooldown):
-            # cba
-            pass
+            await ctx.send(**ctx.em(
+                f"This command is currently **on cooldown** for `{str(timedelta(seconds=error.cooldown.per)).split('.')[0]}`.\n"
+                f"Please **try again in** `{str(timedelta(seconds=error.retry_after)).split('.')[0]}`.",
+                type="error")
+            )
+            return
+
             return
 
         if isinstance(error, cmd.BadUnionArgument):

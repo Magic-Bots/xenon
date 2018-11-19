@@ -35,6 +35,7 @@ class Backups:
     @cmd.guild_only()
     @cmd.has_permissions(administrator=True)
     @cmd.bot_has_permissions(administrator=True)
+    @cmd.cooldown(1, 1 * 60, cmd.BucketType.guild)
     async def create(self, ctx, chatlog: int = 20):
         """
         Create a backup
@@ -85,6 +86,7 @@ class Backups:
     @cmd.has_permissions(administrator=True)
     @cmd.bot_has_permissions(administrator=True)
     @checks.bot_has_managed_top_role()
+    @cmd.cooldown(1, 5 * 60, cmd.BucketType.guild)
     async def load(self, ctx, backup_id, chatlog: int = 20, *load_options):
         """
         Load a backup
@@ -132,6 +134,7 @@ class Backups:
         await ctx.guild.text_channels[0].send(**ctx.em("Successfully loaded backup.", type="success"))
 
     @backup.command(aliases=["del", "remove", "rm"])
+    @cmd.cooldown(1, 5, cmd.BucketType.user)
     async def delete(self, ctx, backup_id):
         """
         Delete a backup
@@ -147,6 +150,7 @@ class Backups:
         await ctx.send(**ctx.em("Successfully **deleted backup**.", type="success"))
 
     @backup.command(aliases=["i", "inf"])
+    @cmd.cooldown(1, 5, cmd.BucketType.user)
     async def info(self, ctx, backup_id):
         """
         Get information about a backup
@@ -170,6 +174,7 @@ class Backups:
         await ctx.send(embed=embed)
 
     @backup.command(aliases=["iv", "auto"])
+    @cmd.cooldown(1, 30, cmd.BucketType.guild)
     async def interval(self, ctx, *interval):
         """
         Setup automated backups
