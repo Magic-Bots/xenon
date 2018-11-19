@@ -10,11 +10,8 @@ class Templates:
 
     @cmd.group(aliases=["temp"], invoke_without_command=True)
     async def template(self, ctx):
+        """Create & load public templates"""
         await ctx.invoke(self.bot.get_command("help"), "template")
-
-    @cmd.command()
-    async def templates(self, ctx):
-        await ctx.invoke(self.bot.get_command("template"), "list")
 
     @template.command(aliases=["ls"])
     async def list(self, ctx):
@@ -22,6 +19,16 @@ class Templates:
 
     @template.command(aliases=["c"])
     async def create(self, ctx, backup_id, name, *, description):
+        """
+        Turn a private backup into a PUBLIC template.
+
+
+        backup_id   ::      The id of the backup that you want to turn into a template
+
+        name        ::      A name for the template
+
+        description ::      A description for the template
+        """
         name = name.lower().replace(" ", "_")
         backup = await ctx.db.rdb.table("backups").get(backup_id).run(ctx.db.con)
         if backup is None or backup.get("creator") != str(ctx.author.id):
@@ -67,6 +74,12 @@ class Templates:
 
     @template.command(aliases=["del", "rm", "remove"])
     async def delete(self, ctx, *, template_name):
+        """
+        Delete a template created by you
+
+
+        template_name ::    The name of the template
+        """
         template_name = template_name.lower().replace(" ", "_")
         template = await ctx.db.rdb.table("templates").get(template_name).run(ctx.db.con)
         if template is None or template.get("creator") != str(ctx.author.id):
@@ -81,6 +94,12 @@ class Templates:
     @cmd.bot_has_permissions(administrator=True)
     @checks.bot_has_managed_top_role()
     async def load(self, ctx, *, template_name):
+        """
+        Load a template
+
+
+        template_name ::    The name of the template
+        """
         template_name = template_name.lower().replace(" ", "_")
         template = await ctx.db.rdb.table("templates").get(template_name).run(ctx.db.con)
         if template is None:
@@ -104,11 +123,18 @@ class Templates:
             await warning.delete()
             return
 
+        await ctx.db.rdb.table("templates").get(template_name).update({"loaded": ctx.db.rdb.row["loaded"] + 1}).run(ctx.db.con)
         handler = BackupLoader(self.bot, self.bot.session, template["template"])
         await handler.load(ctx.guild, ctx.author, 0)
 
     @template.command(aliases=["i", "inf"])
     async def info(self, ctx, *, template_name):
+        """
+        Get information about a template
+
+
+        template_name ::    The name of the template
+        """
         template_name = template_name.lower().replace(" ", "_")
         template = await ctx.db.rdb.table("templates").get(template_name).run(ctx.db.con)
         if template is None:

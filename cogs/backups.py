@@ -5,6 +5,7 @@ import random
 import traceback
 from asyncio import TimeoutError, sleep
 from datetime import datetime, timedelta
+import pytz
 
 from utils import checks, helpers
 
@@ -15,12 +16,15 @@ max_chatlog = 20
 class Backups:
     def __init__(self, bot):
         self.bot = bot
-        self.bot.loop.create_task(self.interval_loop())
-        self.bot.loop.create_task(self.backup_loop())
         self.to_backup = []
+
+        if getattr(bot, "backup_interval", None) is None:
+            bot.backup_interval = bot.loop.create_task(self.interval_loop())
+            bot.loop.create_task(self.backup_loop())
 
     @cmd.group(aliases=["bu"], invoke_without_command=True)
     async def backup(self, ctx):
+        """Create & load backups of your servers"""
         await ctx.invoke(self.bot.get_command("help"), "backup")
 
     def random_id(self):
@@ -31,6 +35,12 @@ class Backups:
     @cmd.has_permissions(administrator=True)
     @cmd.bot_has_permissions(administrator=True)
     async def create(self, ctx, chatlog: int = 20):
+        """
+        Create a backup
+
+
+        chatlog ::      The count of messages to save per channel (max. 20) (default 20)
+        """
         chatlog = chatlog if chatlog < max_chatlog and chatlog > 0 else max_chatlog
         status = await ctx.send(**ctx.em("**Creating backup** ... Please wait", type="working"))
         handler = BackupSaver(self.bot, self.bot.session, ctx.guild)
@@ -39,6 +49,7 @@ class Backups:
         await ctx.db.rdb.table("backups").insert({
             "id": id,
             "creator": str(ctx.author.id),
+            "timestamp": datetime.now(pytz.utc),
             "backup": backup
         }).run(ctx.db.con)
 
@@ -58,7 +69,15 @@ class Backups:
     @cmd.has_permissions(administrator=True)
     @cmd.bot_has_permissions(administrator=True)
     @checks.bot_has_managed_top_role()
-    async def load(self, ctx, backup_id, chatlog: int = 20):
+    async def load(self, ctx, backup_id, chatlog: int = 20, *load_options):
+        """
+        Load a backup
+
+
+        backup_id ::    The id of the backup
+
+        chatlog   ::    The count of messages to load per channel (max. 20) (default 20)
+        """
         chatlog = chatlog if chatlog < max_chatlog and chatlog >= 0 else max_chatlog
         backup = await ctx.db.rdb.table("backups").get(backup_id).run(ctx.db.con)
         if backup is None or backup.get("creator") != str(ctx.author.id):
@@ -81,11 +100,29 @@ class Backups:
             await warning.delete()
             return
 
+        if len(load_options) == 0:
+            options = {
+                "channels": True,
+                "roles": True
+            }
+
+        else:
+            options = {}
+            for opt in load_options:
+                options[opt.lower()] = True
+
         handler = BackupLoader(self.bot, self.bot.session, backup["backup"])
-        await handler.load(ctx.guild, ctx.author, chatlog)
+        await handler.load(ctx.guild, ctx.author, chatlog, **options)
+        await ctx.guild.text_channels[0].send(**ctx.em("Successfully loaded backup.", type="success"))
 
     @backup.command(aliases=["del", "remove", "rm"])
     async def delete(self, ctx, backup_id):
+        """
+        Delete a backup
+
+
+        backup_id ::    The id of the backup
+        """
         backup = await ctx.db.rdb.table("backups").get(backup_id).run(ctx.db.con)
         if backup is None or backup.get("creator") != str(ctx.author.id):
             raise cmd.CommandError(f"You have **no backup** with the id `{backup_id}`.")
@@ -95,6 +132,11 @@ class Backups:
 
     @backup.command(aliases=["i", "inf"])
     async def info(self, ctx, backup_id):
+        """
+        Get information about a backup
+
+        backup_id ::    The id of the backup
+        """
         backup = await ctx.db.rdb.table("backups").get(backup_id).run(ctx.db.con)
         if backup is None or backup.get("creator") != str(ctx.author.id):
             raise cmd.CommandError(f"You have **no backup** with the id `{backup_id}`.")
@@ -104,13 +146,23 @@ class Backups:
         embed.title = handler.name
         embed.add_field(name="Creator", value=f"<@{backup['creator']}>")
         embed.add_field(name="Members", value=handler.member_count, inline=True)
-        embed.add_field(name="Created At", value="N/A", inline=False)
+        embed.add_field(name="Created At", value=helpers.datetime_to_string(
+            backup["timestamp"]), inline=False
+        )
         embed.add_field(name="Channels", value=handler.channels(), inline=True)
         embed.add_field(name="Roles", value=handler.roles(), inline=True)
         await ctx.send(embed=embed)
 
     @backup.command(aliases=["iv", "auto"])
     async def interval(self, ctx, *interval):
+        """
+        Setup automated backups
+
+
+        interval ::     The time between every backup.
+                        Supported units: minutes (m), hours (h), days (d), weeks (w), month (m)
+                        Example: 1d 12h
+        """
         if len(interval) == 0:
             interval = await ctx.db.rdb.table("intervals").get(str(ctx.guild.id)).run(ctx.db.con)
             if interval is None:
@@ -177,6 +229,7 @@ class Backups:
                     await db.rdb.table("backups").insert({
                         "id": id,
                         "creator": str(guild.owner.id),
+                        "timestamp": datetime.now(pytz.utc),
                         "backup": backup
                     }).run(db.con)
 
