@@ -69,8 +69,8 @@ class Basics(cmd.Cog, name="\u200BOthers"):
         """Invite Xenon"""
         await ctx.send(**ctx.em("**Invite Xenon**\n\n"
                                 f"[Xenon]({ctx.bot.invite})\n"
-                                "[Xenon Pro](https://discordapp.com/api/oauth2/authorize?client_id=524652984425250847&permissions=8&scope=bot) Use `x!pro` to get more information.\n"
-                                "[Xenon Turbo](https://discordapp.com/api/oauth2/authorize?client_id=598534174894194719&permissions=8&scope=bot)",
+                                f"[Xenon Pro]({self.bot.config.pro_url}) Use `x!pro` to get more information.\n"
+                                f"[Xenon Turbo]({self.bot.config.turbo_url})",
                                 type="info"))
 
     @cmd.command(aliases=["i", "stats", "status", "about"])
