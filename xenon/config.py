@@ -27,6 +27,8 @@ class Config:
     support_guild = 410488579140354049
     owner_id = 386861188891279362
     invite_url = None  # Set to None to generate one automatically
+    pro_url = "https://discordapp.com/api/oauth2/authorize?client_id=524652984425250847&permissions=8&scope=bot"
+    turbo_url = "https://discordapp.com/api/oauth2/authorize?client_id=598534174894194719&permissions=8&scope=bot"
 
     identifier = "xenon"
 
