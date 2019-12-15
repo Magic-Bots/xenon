@@ -25,7 +25,7 @@ class ACLMenu:
             if not role.managed:
                 if self.rolescount % 9 == 0:
                     pagecounter += 1
-                    self.pages.append({'name': 'Choose which user is allowed to use me', 'options': []})
+                    self.pages.append({'name': 'Choose which roles are allowed to use Xenon on this server', 'options': []})
                 self.pages[pagecounter]['options'].append([role.id, role.permissions.administrator])
                 self.rolescount += 1
 
@@ -110,7 +110,7 @@ class ACLMenu:
     def _create_embed(self):
         page_options = self.pages[self.page - 1]
         embed = self.ctx.em("", title="Access Control List")["embed"]
-        embed.title = page_options["name"].title()
+        embed.title = page_options["name"]
         embed.set_footer(text="Enable / Disable options with the reactions and click ✅ when you are done")
         for i, (name, value) in enumerate(page_options["options"]):
             embed.description += f"{i + 1}\u20e3 **{discord.utils.get(self.ctx.guild.roles, id=name).name.title()}** -> {'✅' if value else '❌'}\n"
