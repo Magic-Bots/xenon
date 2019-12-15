@@ -2,7 +2,6 @@ from discord.ext import commands as cmd
 import asyncio
 import discord
 
-import math
 from utils import helpers, checks
 
 
@@ -26,7 +25,7 @@ class ACLMenu:
                 if self.rolescount % 9 == 0:
                     pagecounter += 1
                     self.pages.append({'name': 'Choose which roles are allowed to use Xenon on this server', 'options': []})
-                self.pages[pagecounter]['options'].append([role.id, role.permissions.administrator])
+                self.pages[pagecounter]['options'].append([str(role.id), role.permissions.administrator])
                 self.rolescount += 1
 
     async def update(self):
@@ -113,7 +112,7 @@ class ACLMenu:
         embed.title = page_options["name"]
         embed.set_footer(text="Enable / Disable options with the reactions and click ✅ when you are done")
         for i, (name, value) in enumerate(page_options["options"]):
-            embed.description += f"{i + 1}\u20e3 **{discord.utils.get(self.ctx.guild.roles, id=name).name.title()}** -> {'✅' if value else '❌'}\n"
+            embed.description += f"{i + 1}\u20e3 **{discord.utils.get(self.ctx.guild.roles, id=int(name)).name}** -> {'✅' if value else '❌'}\n"
 
         return embed
 
@@ -137,10 +136,33 @@ class Acl(cmd.Cog, name="Security"):
         """
         menu = ACLMenu(ctx)
         options = await menu.run()
-        return
 
-        if options["@everyone"]:
-            pass
+        if options[str(discord.utils.get(ctx.guild.roles, name="@everyone").id)]:
+            warning = await ctx.send(
+                **ctx.em("Are you sure that you want to apply?\n"
+                         "Everyone on the server would be able to backup/restore on this server!",
+                         type="warning"))
+            await warning.add_reaction("✅")
+            await warning.add_reaction("❌")
+            try:
+                reaction, user = await self.bot.wait_for(
+                    "reaction_add",
+                    check=lambda r, u: r.message.id == warning.id and u.id == ctx.author.id,
+                    timeout=60)
+            except asyncio.TimeoutError:
+                await warning.delete()
+                raise cmd.CommandError(
+                    "Please make sure to **click the ✅ reaction** in order to continue.")
+
+            if str(reaction.emoji) != "✅":
+                ctx.command.reset_cooldown(ctx)
+                await warning.delete()
+                return
+        
+        await ctx.db.acl.update_one({'_id': ctx.guild.id}, {'$set': {'_id': ctx.guild.id, 'list': options}}, upsert=True)
+        await ctx.send(
+                **ctx.em("Access Control List was applied successfully.",
+                         type="info"))
 # LETZTE ZEILE CODE HIER HIN
 
 
