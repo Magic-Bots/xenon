@@ -2,7 +2,7 @@ from discord.ext import commands as cmd
 from prettytable import PrettyTable
 from datetime import datetime, timedelta
 
-from utils import formatter, helpers
+from utils import formatter, helpers, checks
 
 
 class Basics(cmd.Cog, name="\u200BOthers"):
@@ -15,7 +15,7 @@ class Basics(cmd.Cog, name="\u200BOthers"):
         await ctx.send(**ctx.em(f"I have a **latency** of **{round(self.bot.latency * 1000, 1)} ms**.", type="info"))
 
     @cmd.command()
-    @cmd.has_permissions(administrator=True)
+    @checks.has_access()
     async def leave(self, ctx):
         """Let the bot leave"""
         await ctx.send("bye ;(")

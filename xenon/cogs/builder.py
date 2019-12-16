@@ -138,7 +138,7 @@ class Builder(cmd.Cog, name="Creating"):
 
     @cmd.command(aliases=["builder", "bld", "bd"])
     @cmd.guild_only()
-    @cmd.has_permissions(administrator=True)
+    @checks.has_access()
     @cmd.bot_has_permissions(administrator=True)
     @checks.bot_has_managed_top_role()
     @cmd.cooldown(1, 5 * 60, cmd.BucketType.guild)

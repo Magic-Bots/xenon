@@ -53,7 +53,7 @@ class Backups(cmd.Cog, name="Security"):
 
     @backup.command(aliases=["c"])
     @cmd.guild_only()
-    @cmd.has_permissions(administrator=True)
+    @checks.has_access()
     @cmd.bot_has_permissions(administrator=True)
     @cmd.cooldown(1, 3 * 60, cmd.BucketType.guild)
     async def create(self, ctx):
@@ -97,7 +97,7 @@ class Backups(cmd.Cog, name="Security"):
 
     @backup.command(aliases=["l"])
     @cmd.guild_only()
-    @cmd.has_permissions(administrator=True)
+    @checks.has_access()
     @cmd.bot_has_permissions(administrator=True)
     @checks.bot_has_managed_top_role()
     @cmd.cooldown(1, 5 * 60, cmd.BucketType.guild)
@@ -325,7 +325,7 @@ class Backups(cmd.Cog, name="Security"):
 
     @backup.command(aliases=["iv", "auto"])
     @cmd.cooldown(1, 1, cmd.BucketType.guild)
-    @cmd.has_permissions(administrator=True)
+    @checks.has_access()
     @cmd.bot_has_permissions(administrator=True)
     async def interval(self, ctx, *interval):
         """
