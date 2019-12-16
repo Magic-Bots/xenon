@@ -12,7 +12,7 @@ class ACLMenu:
         self.msg = None
         self.page = 1
         self.pages = []
-        self.owner_only_pages = [{'name': 'ACL disabled: Disable owner only mode to reenable', 'options': [["owner_only", True]]}]
+        self.owner_only_pages = [{'name': 'ACL disabled: Disable owner only mode to reenable the ACL', 'options': [["owner_only", True]]}]
         self.rolescount = 0
         acl = acldoc['list']
         
@@ -160,8 +160,32 @@ class Acl(cmd.Cog, name="Security"):
         menu = ACLMenu(ctx, acldoc)
         options = await menu.run()
 
-        if not await antiidiot.check(ctx):
-            await ctx.send("You are an idiot. Idiots may not continue here! Please retry.")
+        warning = await ctx.send(
+            **ctx.em("Are you sure you want to apply the changes?\n"
+                     "**Think twice!** Misconfigurations could allow others to **destory** your server!\n",
+                     type="warning"))
+            
+        await warning.add_reaction("❌")
+        await warning.add_reaction("✅")
+        try:
+            reaction, user = await self.bot.wait_for(
+                "reaction_add",
+                check=lambda r, u: r.message.id == warning.id and u.id == ctx.author.id,
+                timeout=60
+            )
+        except TimeoutError:
+            await warning.delete()
+            raise cmd.CommandError(
+                "Please make sure to **click the ✅ reaction** in order to apply the changes."
+            )
+        if str(reaction.emoji) != "✅":
+            await warning.delete()
+            raise cmd.CommandError(
+                "Please make sure to **click the ✅ reaction** in order to apply the changes."
+            )
+        
+        await warning.delete()
+        await antiidiot.check(ctx)
 
         if options["owner_only"]:
             del options['owner_only']

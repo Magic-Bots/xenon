@@ -21,6 +21,7 @@ async def check(ctx):
 
 async def ask_question(ctx, question, timeout):
     question_msg = await ctx.send(**ctx.em(question, type="wait_for"))
+    
     try:
         msg = await ctx.bot.wait_for(
             event="message",
