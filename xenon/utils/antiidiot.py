@@ -13,7 +13,7 @@ async def check(ctx):
     idiottest = random.choice(list(ctx.config.idiottests.items()))
 
     answer = await ask_question(ctx, f"To continue, answer the following question:\nWhat is the missing letter in {idiottest[0]}?", 10)
-    if answer != idiottest[1]:
+    if answer.lower() != idiottest[1].lower():
         raise cmd.CommandError("**Canceled**, because your answer was incorrect")
     
     return True
