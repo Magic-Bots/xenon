@@ -6,6 +6,23 @@ import discord
 log = logging.getLogger(__name__)
 
 
+def has_permissive_role():
+    async def predicate(ctx):
+        acldoc = await ctx.db.acl.find_one({'_id': ctx.guild.id})
+        acl = acldoc['list']
+        
+        if ctx.author.guild_permissions.administrator:
+            return True
+    
+        for role in ctx.author.roles:
+            if str(role.id) in acl and acl[str(role.id)]:
+                return True
+            
+        raise cmd.CommandError("You are **not** allowed to run this comand.")
+
+    return cmd.check(predicate)
+
+
 def bot_has_managed_top_role():
     async def predicate(ctx):
         if ctx.guild.roles[-1].managed and ctx.guild.roles[-1] in ctx.guild.me.roles:
