@@ -46,7 +46,7 @@ class Config:
         "raspb_rry": "e",
         "ra_dom": "n",
         "disc_rd": "o",
-        "suppor_": "t"
+        "suppor_": "t",
         "and_oid": "r",
         "emo_i": "j",
         "bot_le": "t"
