@@ -2,7 +2,7 @@ from discord.ext import commands as cmd
 import asyncio
 import discord
 
-from utils import helpers, checks
+from utils import helpers, checks, antiidiot
 
 
 
@@ -159,11 +159,15 @@ class Acl(cmd.Cog, name="Security"):
         acldoc = await ctx.db.acl.find_one({'_id': ctx.guild.id})
         menu = ACLMenu(ctx, acldoc)
         options = await menu.run()
-        del options['owner_only']
+
+        if not await antiidiot.check(ctx):
+            await ctx.send("You are an idiot. Idiots may not continue here! Please retry.")
 
         if options["owner_only"]:
+            del options['owner_only']
             await ctx.db.acl.update_one({'_id': ctx.guild.id}, {'$set': {'_id': ctx.guild.id, 'owner_only': True}}, upsert=True)
         else:
+            del options['owner_only']
             await ctx.db.acl.update_one({'_id': ctx.guild.id}, {'$set': {'_id': ctx.guild.id, 'owner_only': False, 'list': options}}, upsert=True)
 
         await ctx.send(
