@@ -6,18 +6,26 @@ import discord
 log = logging.getLogger(__name__)
 
 
-def has_permissive_role():
+def has_access():
     async def predicate(ctx):
         acldoc = await ctx.db.acl.find_one({'_id': ctx.guild.id})
+        
+        if not acldoc:
+            acldoc = {'_id': ctx.guild.id, 'owner_only': False, 'list': {'0': False}}
         acl = acldoc['list']
         
-        if ctx.author.guild_permissions.administrator:
-            return True
-    
-        for role in ctx.author.roles:
-            if str(role.id) in acl and acl[str(role.id)]:
+        if 'owner_only' in acldoc and acldoc['owner_only']:
+            if ctx.author.id == ctx.guild.owner_id:
                 return True
-            
+        
+        elif ctx.author.guild_permissions.administrator:
+            return True
+        
+        else:
+            for role in ctx.author.roles:
+                if str(role.id) in acl and acl[str(role.id)]:
+                    return True
+        
         raise cmd.CommandError("You are **not** allowed to run this comand.")
 
     return cmd.check(predicate)
