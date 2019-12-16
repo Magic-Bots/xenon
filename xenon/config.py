@@ -39,6 +39,15 @@ class Config:
     template_list = None
     template_approval = None
     template_featured = None
+    
+    idiottests = {
+        "s_mmer": "u",
+        "com_uter": "p",
+        "raspb_rry": "e",
+        "ra_dom": "n",
+        "disc_rd": "o",
+        "suppor_": "t"
+    }
 
     extensions = [
         "errors",
@@ -48,6 +57,7 @@ class Config:
         "templates",
         "users",
         "basics",
+	"acl",
         "sharding",
         "botlist",
         "api",
