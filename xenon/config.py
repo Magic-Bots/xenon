@@ -47,6 +47,9 @@ class Config:
         "ra_dom": "n",
         "disc_rd": "o",
         "suppor_": "t"
+        "and_oid": "r",
+        "emo_i": "j",
+        "bot_le": "t"
     }
 
     extensions = [
@@ -57,7 +60,7 @@ class Config:
         "templates",
         "users",
         "basics",
-	"acl",
+	       "acl",
         "sharding",
         "botlist",
         "api",
