@@ -101,7 +101,7 @@ class Admin(cmd.Cog, command_attrs=dict(hidden=True)):
     @cmd.command()
     @checks.has_role_on_support_guild("Admin")
     async def restart(self, ctx):
-        await ctx.send(**ctx.em("Reastarting ...", type="info"))
+        await ctx.send(**ctx.em("Restarting ...", type="info"))
         await self.bot.close()
 
     @cmd.command(name="exec")
