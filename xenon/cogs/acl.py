@@ -110,7 +110,7 @@ class ACLMenu:
 
             try:
                 self.pages[self.page - 1]["options"][option][1] = not self.pages[self.page - 1]["options"][option][1]
-            except IndexError or CommandError:
+            except IndexError:
                 pass
 
             return True
