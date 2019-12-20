@@ -13,18 +13,23 @@ class ACLMenu:
         self.page = 1
         self.pages = []
         self.owner_only_pages = [{'name': 'ACL disabled: Disable owner only mode to reenable the ACL', 'options': [["owner_only", True]]}]
+        self.begin_page = {'name': 'Choose which roles are allowed to use Xenon on this server', 'options': [["owner_only", False]]}
         self.rolescount = 0
         acl = acldoc['list']
         
         pagecounter = -1
         for role in ctx.guild.roles:
-            if not role.managed and role.name != "@everyone" and not role.permissions.administrator:
+            if not role.managed and role.name != "@everyone" and role.permissions.manage_channels and role.permissions.manage_roles and not role.permissions.administrator:
                 if self.rolescount % 8 == 0:
                     pagecounter += 1
-                    self.pages.append({'name': 'Choose which roles are allowed to use Xenon on this server', 'options': [["owner_only", False]]})
+                    self.pages.append(self.begin_page)
 
                 self.pages[pagecounter]['options'].append([str(role.id), str(role.id) in acl and acl[str(role.id)]])
                 self.rolescount += 1
+        
+        if self.rolescount == 0:
+            pagecounter = 1
+            self.pages.append(self.begin_page)
         
         self.pages_all = self.pages
         if 'owner_only' in acldoc and acldoc['owner_only']:
@@ -131,7 +136,7 @@ class ACLMenu:
         page_options = self.pages[self.page - 1]
         embed = self.ctx.em("")["embed"]
         embed.title = page_options["name"]
-        embed.set_footer(text="Enable / Disable options with the reactions and click ✅ when you are done\nAdministrative roles can't be excluded from the list!")
+        embed.set_footer(text="Enable / Disable options with the reactions and click ✅ when you are done\nAdministrative roles can't be excluded from the list! Use owner only mode instead.\nOnly roles with manage_channels and manage_roles permissions are selectable.")
         for i, (name, value) in enumerate(page_options["options"]):
             embed.description += f"{i + 1}\u20e3 **{self.get_rolename(name)}** -> {'✅' if value else '❌'}\n"
 
