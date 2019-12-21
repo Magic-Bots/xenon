@@ -162,6 +162,9 @@ class Acl(cmd.Cog, name="Security"):
             raise cmd.CommandError("This command can be used by the **onwer** of this server **only**.")
         
         acldoc = await ctx.db.acl.find_one({'_id': ctx.guild.id})
+        if not acldoc:
+            acldoc = {'_id': ctx.guild.id, 'list': {}}
+
         menu = ACLMenu(ctx, acldoc)
         options = await menu.run()
 
