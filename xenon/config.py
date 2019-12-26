@@ -26,16 +26,16 @@ class Config:
     redis_host = "localhost"
 
     template_approval_channel = 633228946875482112
-    template_list = None
-    template_approval = None
-    template_featured = None
+#    template_list = None
+#    template_approval = None
+#    template_featured = None
 
     extensions = [
         "errors",
         "help",
         "admin",
         "backups",
-        "templates",
+#        "templates",
         "users",
         "basics",
         "sharding",
