@@ -14,7 +14,7 @@ class BackupSaver:
         self.bot = bot
         self.guild = guild
         self.data = {}
- 
+
     @staticmethod
     def _overwrites_to_json(overwrites):
         try:
